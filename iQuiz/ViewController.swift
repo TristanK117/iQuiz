@@ -7,13 +7,39 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+
+    @IBOutlet weak var tableView: UITableView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+
+        navigationItem.title = "iQuiz"
+        let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
+        navigationItem.rightBarButtonItem = settingsButton
+
+        tableView.delegate = self
+        tableView.dataSource = self
     }
 
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return quizzes.count
+    }
 
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "QuizCell", for: indexPath)
+
+        let quiz = quizzes[indexPath.row]
+        cell.textLabel?.text = quiz.title
+        cell.detailTextLabel?.text = quiz.description
+        cell.imageView?.image = UIImage(systemName: quiz.iconName)
+
+        return cell
+    }
+
+    @objc func showSettings() {
+        let alert = UIAlertController(title: nil, message: "Settings go here", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
 }
-
