@@ -11,6 +11,7 @@ class SettingsViewController: UIViewController {
 
     @IBOutlet weak var urlTextField: UITextField!
     @IBOutlet weak var checkNowButton: UIButton!
+    @IBOutlet weak var intervalTextField: UITextField!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +31,11 @@ class SettingsViewController: UIViewController {
         UserDefaults.standard.set(urlString, forKey: "quizURL")
 
         fetchQuizzes(from: urlString)
+        
+        if let intervalText = intervalTextField.text,
+           let interval = Double(intervalText) {
+            UserDefaults.standard.set(interval, forKey: "refreshInterval")
+        }
     }
 
     func fetchQuizzes(from urlString: String) {

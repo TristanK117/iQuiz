@@ -57,6 +57,15 @@ class FinishedViewController: UIViewController {
             doneButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 60),
             doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
+        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshQuizzes), for: .valueChanged)
+    }
+    
+    @objc func refreshQuizzes() {
+        print("🔄 Pull-to-refresh triggered")
+
+        let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "http://tednewardsandbox.site44.com/questions.json"
     }
 
     @objc func doneTapped() {

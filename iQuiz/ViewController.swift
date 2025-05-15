@@ -15,6 +15,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     var quizzes: [Quiz] = []
     let monitor = NWPathMonitor()
     let queue = DispatchQueue(label: "NetworkMonitor")
+    var refreshTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,8 +27,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.delegate = self
         tableView.dataSource = self
 
-        fetchQuizzes()
-        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshQuizzes), for: .valueChanged)
+        tableView.refreshControl = refreshControl
+
+        let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "https://tednewardsandbox.site44.com/questions.json"
+        fetchQuizzes(from: urlString)
+
         monitor.pathUpdateHandler = { path in
             if path.status != .satisfied {
                 DispatchQueue.main.async {
@@ -39,34 +45,44 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 }
             }
         }
-
         monitor.start(queue: queue)
+
+        let interval = UserDefaults.standard.double(forKey: "refreshInterval")
+        if interval > 0 {
+            refreshTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+                print("🔁 Timed refresh triggered")
+                let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "http://tednewardsandbox.site44.com/questions.json"
+                self.fetchQuizzes(from: urlString)
+            }
+        }
     }
 
-    func fetchQuizzes() {
-        let urlString = "https://tednewardsandbox.site44.com/questions.json"
+    @objc func refreshQuizzes() {
+        let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "http://tednewardsandbox.site44.com/questions.json"
+        fetchQuizzes(from: urlString)
+        tableView.refreshControl?.endRefreshing()
+    }
+
+    func fetchQuizzes(from urlString: String) {
         guard let url = URL(string: urlString) else { return }
 
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                print("❌ Network error: \(error?.localizedDescription ?? "Unknown")")
-                return
-            }
+            guard let data = data, error == nil else { return }
 
             do {
-                let decoder = JSONDecoder()
-                let quizzes = try decoder.decode([Quiz].self, from: data)
+                let quizzes = try JSONDecoder().decode([Quiz].self, from: data)
                 DispatchQueue.main.async {
                     self.quizzes = quizzes
                     self.tableView.reloadData()
                 }
             } catch {
-                print("❌ JSON decoding failed: \(error)")
+                print("JSON decoding error: \(error)")
             }
         }
 
         task.resume()
     }
+
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return quizzes.count
@@ -77,13 +93,15 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let quiz = quizzes[indexPath.row]
         cell.textLabel?.text = quiz.title
         cell.detailTextLabel?.text = quiz.desc
-        cell.imageView?.image = UIImage(systemName: "questionmark.circle") // Use a default icon
+        cell.imageView?.image = UIImage(systemName: "questionmark.circle")
         return cell
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "ShowQuestion", sender: indexPath)
     }
+
+    // MARK: - Navigation
 
     @objc func showSettings() {
         if let settingsVC = storyboard?.instantiateViewController(withIdentifier: "SettingsViewController") as? SettingsViewController {
