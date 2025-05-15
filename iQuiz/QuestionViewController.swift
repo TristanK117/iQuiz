@@ -20,7 +20,7 @@ class QuestionViewController: UIViewController, UITableViewDelegate, UITableView
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
-        tableView.dataSource = self
+        tableView.dataSource = self 
         submitButton.isEnabled = false
         displayCurrentQuestion()
     }
@@ -57,7 +57,7 @@ class QuestionViewController: UIViewController, UITableViewDelegate, UITableView
            let destination = segue.destination as? AnswerViewController {
             let question = quiz.questions[currentQuestionIndex]
             let selected = selectedAnswerIndex ?? -1
-            let isCorrect = selected == question.correctAnswerIndex
+            let isCorrect = question.answers[selected] == question.answer
             if isCorrect { correctAnswersCount += 1 }
 
             destination.quiz = quiz

@@ -26,7 +26,7 @@ class AnswerViewController: UIViewController {
         super.viewDidLoad()
 
         questionLabel.text = question.text
-        correctAnswerLabel.text = "Correct answer: \(question.answers[question.correctAnswerIndex])"
+        correctAnswerLabel.text = "Correct answer: \(question.answer)"
         resultLabel.text = isCorrect ? "You got it right!" : "That was incorrect."
 
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(nextTapped(_:)))
