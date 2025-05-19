@@ -7,7 +7,6 @@
 
 import UIKit
 
-
 class AnswerViewController: UIViewController {
 
     @IBOutlet weak var questionLabel: UILabel!
@@ -26,7 +25,14 @@ class AnswerViewController: UIViewController {
         super.viewDidLoad()
 
         questionLabel.text = question.text
-        correctAnswerLabel.text = "Correct answer: \(question.answers[question.correctAnswerIndex])"
+        if let correctAnswerFromArray = question.answers.first(where: {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ==
+            question.answer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }) {
+            correctAnswerLabel.text = "Correct answer: \(correctAnswerFromArray)"
+        } else {
+            correctAnswerLabel.text = "Correct answer: \(question.answer)"
+        }
         resultLabel.text = isCorrect ? "You got it right!" : "That was incorrect."
 
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(nextTapped(_:)))
@@ -57,14 +63,5 @@ class AnswerViewController: UIViewController {
 
     @objc func abandonQuiz() {
         navigationController?.popToRootViewController(animated: true)
-    }
-
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "ShowFinished",
-           let destination = segue.destination as? FinishedViewController {
-            destination.correctAnswers = correctAnswersCount
-            destination.totalQuestions = quiz.questions.count
-            destination.quiz = quiz
-        }
     }
 }

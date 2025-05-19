@@ -7,7 +7,7 @@
 import UIKit
 
 class QuestionViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
-    
+
     @IBOutlet weak var questionLabel: UILabel!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var submitButton: UIButton!
@@ -51,13 +51,23 @@ class QuestionViewController: UIViewController, UITableViewDelegate, UITableView
     @IBAction func submitTapped(_ sender: UIButton) {
         performSegue(withIdentifier: "ShowAnswer", sender: nil)
     }
-
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAnswer",
            let destination = segue.destination as? AnswerViewController {
+
             let question = quiz.questions[currentQuestionIndex]
-            let selected = selectedAnswerIndex ?? -1
-            let isCorrect = selected == question.correctAnswerIndex
+
+            guard let selected = selectedAnswerIndex,
+                  selected >= 0,
+                  selected < question.answers.count else {
+                print("❌ Invalid answer index")
+                return
+            }
+
+            let selectedAnswer = question.answers[selected].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let correctAnswer = question.answer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let isCorrect = selectedAnswer == correctAnswer
             if isCorrect { correctAnswersCount += 1 }
 
             destination.quiz = quiz
