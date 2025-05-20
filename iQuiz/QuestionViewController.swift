@@ -4,6 +4,7 @@
 //
 //  Created by Tristan Khieu on 5/12/25.
 //
+
 import UIKit
 
 class QuestionViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
@@ -51,28 +52,34 @@ class QuestionViewController: UIViewController, UITableViewDelegate, UITableView
     @IBAction func submitTapped(_ sender: UIButton) {
         performSegue(withIdentifier: "ShowAnswer", sender: nil)
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowAnswer",
            let destination = segue.destination as? AnswerViewController {
 
             let question = quiz.questions[currentQuestionIndex]
 
-            guard let selected = selectedAnswerIndex,
-                  selected >= 0,
-                  selected < question.answers.count else {
-                print("❌ Invalid answer index")
+            guard let selectedIndex = selectedAnswerIndex else {
+                print("No answer selected.")
                 return
             }
 
-            let selectedAnswer = question.answers[selected].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let correctAnswer = question.answer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let isCorrect = selectedAnswer == correctAnswer
-            if isCorrect { correctAnswersCount += 1 }
+            // Convert 1-based answer index to 0-based
+            guard let correctIndex = Int(question.answer).map({ $0 - 1 }),
+                  correctIndex >= 0,
+                  correctIndex < question.answers.count else {
+                print("Invalid correct answer index")
+                return
+            }
+
+            let isCorrect = selectedIndex == correctIndex
+            if isCorrect {
+                correctAnswersCount += 1
+            }
 
             destination.quiz = quiz
             destination.question = question
-            destination.userAnswerIndex = selected
+            destination.userAnswerIndex = selectedIndex
             destination.isCorrect = isCorrect
             destination.currentQuestionIndex = currentQuestionIndex
             destination.correctAnswersCount = correctAnswersCount

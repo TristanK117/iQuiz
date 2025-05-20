@@ -56,6 +56,35 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }
     }
+    
+    func saveQuizzesToDisk(_ quizzes: [Quiz]) {
+        do {
+            let data = try JSONEncoder().encode(quizzes)
+            let url = getLocalFileURL()
+            try data.write(to: url)
+            print("Quizzes saved to disk at \(url)")
+        } catch {
+            print("Failed to save quizzes: \(error)")
+        }
+    }
+
+    func loadQuizzesFromDisk() -> [Quiz]? {
+        let url = getLocalFileURL()
+        do {
+            let data = try Data(contentsOf: url)
+            let quizzes = try JSONDecoder().decode([Quiz].self, from: data)
+            print("Loaded quizzes from local file.")
+            return quizzes
+        } catch {
+            print("Failed to load quizzes from disk: \(error)")
+            return nil
+        }
+    }
+
+    func getLocalFileURL() -> URL {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        return docs.appendingPathComponent("quizzes.json")
+    }
 
     @objc func refreshQuizzes() {
         let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "http://tednewardsandbox.site44.com/questions.json"
@@ -64,19 +93,32 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
 
     func fetchQuizzes(from urlString: String) {
-        guard let url = URL(string: urlString) else { return }
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            return
+        }
 
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else { return }
+            guard let data = data, error == nil else {
+                print("Fetch failed, trying offline data")
+                if let cached = self.loadQuizzesFromDisk() {
+                    DispatchQueue.main.async {
+                        self.quizzes = cached
+                        self.tableView.reloadData()
+                    }
+                }
+                return
+            }
 
             do {
                 let quizzes = try JSONDecoder().decode([Quiz].self, from: data)
+                self.saveQuizzesToDisk(quizzes)
                 DispatchQueue.main.async {
                     self.quizzes = quizzes
                     self.tableView.reloadData()
                 }
             } catch {
-                print("JSON decoding error: \(error)")
+                print("JSON decoding failed: \(error)")
             }
         }
 
@@ -104,11 +146,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     // MARK: - Navigation
 
     @objc func showSettings() {
-        if let settingsVC = storyboard?.instantiateViewController(withIdentifier: "SettingsViewController") as? SettingsViewController {
-            navigationController?.pushViewController(settingsVC, animated: true)
+        if let url = URL(string: UIApplication.openSettingsURLString),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }
-
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "ShowQuestion",
            let destination = segue.destination as? QuestionViewController,

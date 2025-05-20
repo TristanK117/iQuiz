@@ -5,6 +5,7 @@
 //  Created by Tristan Khieu on 5/12/25.
 //
 
+
 import UIKit
 
 class AnswerViewController: UIViewController {
@@ -25,14 +26,15 @@ class AnswerViewController: UIViewController {
         super.viewDidLoad()
 
         questionLabel.text = question.text
-        if let correctAnswerFromArray = question.answers.first(where: {
-            $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ==
-            question.answer.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        }) {
-            correctAnswerLabel.text = "Correct answer: \(correctAnswerFromArray)"
+
+        if let correctIndex = Int(question.answer).map({ $0 - 1 }),
+           correctIndex >= 0,
+           correctIndex < question.answers.count {
+            correctAnswerLabel.text = "Correct answer: \(question.answers[correctIndex])"
         } else {
-            correctAnswerLabel.text = "Correct answer: \(question.answer)"
+            correctAnswerLabel.text = "Correct answer: Unknown"
         }
+
         resultLabel.text = isCorrect ? "You got it right!" : "That was incorrect."
 
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(nextTapped(_:)))

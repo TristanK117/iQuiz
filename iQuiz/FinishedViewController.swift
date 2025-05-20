@@ -63,7 +63,7 @@ class FinishedViewController: UIViewController {
     }
     
     @objc func refreshQuizzes() {
-        print("🔄 Pull-to-refresh triggered")
+        print("Pull-to-refresh triggered")
 
         let urlString = UserDefaults.standard.string(forKey: "quizURL") ?? "http://tednewardsandbox.site44.com/questions.json"
     }
